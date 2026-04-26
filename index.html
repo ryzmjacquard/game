@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Lompat Sederhana</title>
+    <style>
+        body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: #222; font-family: sans-serif; overflow: hidden; }
+        canvas { background: #fff; border: 4px solid #555; border-radius: 8px; cursor: pointer; }
+        #ui { position: absolute; top: 20px; text-align: center; color: white; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <div id="ui">
+        <h1>Skor: <span id="score">0</span></h1>
+        <p>Klik untuk Melompat!</p>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const scoreElement = document.getElementById("score");
+
+    // Ukuran Canvas
+    canvas.width = 600;
+    canvas.height = 200;
+
+    // Variabel Game
+    let score = 0;
+    let gameActive = true;
+
+    // Objek Pemain
+    const player = {
+        x: 50,
+        y: 150,
+        w: 30,
+        h: 30,
+        color: "#3498db",
+        dy: 0,
+        jumpForce: 12,
+        gravity: 0.6,
+        grounded: false
+    };
+
+    // Objek Rintangan
+    const obstacle = {
+        x: 700,
+        y: 160,
+        w: 20,
+        h: 40,
+        color: "#e74c3c",
+        speed: 5
+    };
+
+    function drawPlayer() {
+        ctx.fillStyle = player.color;
+        ctx.fillRect(player.x, player.y, player.w, player.h);
+    }
+
+    function drawObstacle() {
+        ctx.fillStyle = obstacle.color;
+        ctx.fillRect(obstacle.x, obstacle.y, obstacle.w, obstacle.h);
+    }
+
+    function update() {
+        if (!gameActive) return;
+
+        // Gravitasi & Lompatan
+        player.dy += player.gravity;
+        player.y += player.dy;
+
+        // Cek Lantai
+        if (player.y + player.h > canvas.height) {
+            player.y = canvas.height - player.h;
+            player.dy = 0;
+            player.grounded = true;
+        }
+
+        // Pergerakan Rintangan
+        obstacle.x -= obstacle.speed;
+        if (obstacle.x < -obstacle.w) {
+            obstacle.x = canvas.width + Math.random() * 300;
+            score++;
+            scoreElement.innerText = score;
+            obstacle.speed += 0.2; // Semakin lama semakin cepat
+        }
+
+        // Deteksi Tabrakan
+        if (
+            player.x < obstacle.x + obstacle.w &&
+            player.x + player.w > obstacle.x &&
+            player.y < obstacle.y + obstacle.h &&
+            player.y + player.h > obstacle.y
+        ) {
+            gameOver();
+        }
+    }
+
+    function gameOver() {
+        gameActive = false;
+        alert("Game Over! Skor kamu: " + score);
+        location.reload(); // Reset game
+    }
+
+    function jump() {
+        if (player.grounded && gameActive) {
+            player.dy = -player.jumpForce;
+            player.grounded = false;
+        }
+    }
+
+    // Input
+    window.addEventListener("keydown", jump);
+    canvas.addEventListener("mousedown", jump);
+
+    function loop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        update();
+        drawPlayer();
+        drawObstacle();
+
+        requestAnimationFrame(loop);
+    }
+
+    loop();
+</script>
+</body>
+</html>
